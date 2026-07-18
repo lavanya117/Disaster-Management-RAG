@@ -258,10 +258,19 @@ python scraper\scraper.py
 
 ---
 
+# 🚀 Generate Embeddings
+
+```bash
+python implementation\ingest.py
+```
+
+---
+
+
 # 🚀 Launch the Application
 
 ```bash
-python answer.py
+python implementation\answer.py
 ```
 
 The Gradio interface will launch in your browser, allowing you to interact with the Disaster Management RAG Assistant.
