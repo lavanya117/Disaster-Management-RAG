@@ -9,9 +9,11 @@ from chonkie import TokenChunker
 from dotenv import load_dotenv
 import os
 from multiprocessing import Pool
+from pathlib import Path
 
-
-
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DB_NAME = PROJECT_ROOT / "vector_db"
+chroma = PersistentClient(path=str(DB_NAME))
 
 
 load_dotenv()
@@ -34,10 +36,9 @@ openai= OpenAI(base_url=BASE_URL, api_key='llama')
 reranker_model="BAAI/bge-reranker-v2-m3"
 
 
-
 def fetch_documents():
     documents=[]
-    for file in glob.glob("knowledge_base/*"):
+    for file in glob.glob(r"D:\disaster\Disaster-Management-RAG\knowledge_base/*"):
         with open(file, 'r', encoding='utf-8') as f:
             doc=json.load(f)
             if not doc["text"]==None:
@@ -49,9 +50,8 @@ def fetch_documents():
 
 
 
-
-
 chunker = TokenChunker(chunk_size=512, chunk_overlap=128) #overlaping=25%
+
 
 def process_document(doc):
     chunked = chunker.chunk(doc["text"])
@@ -87,7 +87,6 @@ def create_Chunks(documents, workers=5):
 
 def create_embeddings(chunks):
     vectors=[]
-    chroma=PersistentClient(DB_name)
     if collection_name in [c.name for c in chroma.list_collections()]:
         chroma.delete_collection(collection_name)
     text=[chunk.page_content for chunk in chunks]

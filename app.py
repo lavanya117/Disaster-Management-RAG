@@ -142,16 +142,15 @@ def run_retrieval_evaluation(progress=gr.Progress()):
 
     return final_html, fig
 
-
-def run_answer_evaluation(progress=gr.Progress()):
-    """Run answer evaluation and yield updates (async)."""
+async def run_answer_evaluation(progress=gr.Progress()):
+    """Run answer evaluation and yield updates."""
     total_accuracy = 0.0
     total_completeness = 0.0
     total_relevance = 0.0
     category_accuracy = defaultdict(list)
     count = 0
 
-    for test, result, prog_value in evaluate_all_answers():
+    async for test, result, prog_value in evaluate_all_answers():
         count += 1
         total_accuracy += result.accuracy
         total_completeness += result.completeness
@@ -161,6 +160,12 @@ def run_answer_evaluation(progress=gr.Progress()):
 
         # Update progress bar only
         progress(prog_value, desc=f"Evaluating test {count}...")
+
+    if count == 0:
+        return (
+            "<div style='padding:20px;color:red;'>No tests were evaluated.</div>",
+            go.Figure(),
+        )
 
     # Calculate final averages
     avg_accuracy = total_accuracy / count
@@ -173,8 +178,11 @@ def run_answer_evaluation(progress=gr.Progress()):
         {format_metric_html("Accuracy", avg_accuracy, "accuracy", score_format=True)}
         {format_metric_html("Completeness", avg_completeness, "completeness", score_format=True)}
         {format_metric_html("Relevance", avg_relevance, "relevance", score_format=True)}
-        <div style="margin-top: 20px; padding: 10px; background-color: #d4edda; border-radius: 5px; text-align: center; border: 1px solid #c3e6cb;">
-            <span style="font-size: 14px; color: #155724; font-weight: bold;">✓ Evaluation Complete: {count} tests</span>
+        <div style="margin-top:20px;padding:10px;background-color:#d4edda;
+                    border-radius:5px;text-align:center;border:1px solid #c3e6cb;">
+            <span style="font-size:14px;color:#155724;font-weight:bold;">
+                ✓ Evaluation Complete: {count} tests
+            </span>
         </div>
     </div>
     """
@@ -183,10 +191,20 @@ def run_answer_evaluation(progress=gr.Progress()):
     category_data = []
     for category, accuracy_scores in category_accuracy.items():
         avg_cat_accuracy = sum(accuracy_scores) / len(accuracy_scores)
-        category_data.append({"Category": category, "Average Accuracy": avg_cat_accuracy})
+        category_data.append(
+            {
+                "Category": category,
+                "Average Accuracy": avg_cat_accuracy,
+            }
+        )
 
     df = pd.DataFrame(category_data)
-    fig = make_bar_chart(df, "Average Accuracy", "Average Accuracy by Category", [1, 5])
+    fig = make_bar_chart(
+        df,
+        "Average Accuracy",
+        "Average Accuracy by Category",
+        [1, 5],
+    )
 
     return final_html, fig
 

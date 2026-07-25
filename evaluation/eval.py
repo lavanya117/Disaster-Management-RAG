@@ -4,9 +4,11 @@ from .test import TestQuestion, load_tests
 import sys
 from implementation.answer import fetch_content, answer_question
 from litellm import completion
+from agents_coach.checker import improvement
+import asyncio
 
 
-MODEL='ollama/llama3.1:8b'
+MODEL='ollama/llama3.1'
 
 class  RetrievalEval(BaseModel):
 
@@ -23,10 +25,6 @@ class  RetrievalEval(BaseModel):
 
 class AnswerEval(BaseModel):
     """LLM-as-a-judge evaluation of answer quality."""
-
-    feedback: str = Field(
-        description="Concise feedback on the answer quality, comparing it to the reference answer and evaluating based on the retrieved context"
-    )
     accuracy: float = Field(
         description="How factually correct is the answer compared to the reference answer? 1 (wrong. any wrong answer must score 1) to 5 (ideal - perfectly accurate). An acceptable answer would score 3."
     )
@@ -52,10 +50,10 @@ def calculate_mrr(keyword: str, retrived_doc: list) -> float:
 
 
 
-def calculate_dcg(relevances: list[int], k: int ) -> float: #relevances is a list that consist of relevance scores for each doc in binary 
+def calculate_dcg(relevances: list[int], k: int ) -> float: 
     dcg = 0.0
     for i in range(min(k, len(relevances))):
-        dcg += relevances[i] / math.log2(i + 2)  # i+2 because rank starts at 1
+        dcg += relevances[i] / math.log2(i + 2)  
     return dcg
 
 
@@ -105,7 +103,7 @@ def evaluate_retrieval(test: TestQuestion, k: int = 10) -> RetrievalEval:
 
 
 
-def evaluate_answer(test: TestQuestion) -> tuple[AnswerEval, str, list]:
+async def evaluate_answer(test: TestQuestion) -> tuple[AnswerEval, str, list]:
     """
     Evaluate answer quality using LLM-as-a-judge (async).
 
@@ -116,7 +114,8 @@ def evaluate_answer(test: TestQuestion) -> tuple[AnswerEval, str, list]:
         Tuple of (AnswerEval object, generated_answer string, retrieved_docs list)
     """
 
-    generated_answer, retrieved_docs = answer_question(test.question)
+    _, retrieved_docs = answer_question(test.question)
+    generated_answer = await improvement(test)
     judge_messages = [
 {
     "role": "system",
@@ -166,7 +165,6 @@ Relevance (1-5)
 Return ONLY valid JSON in exactly this format:
 
 {
-  "feedback": "One or two concise sentences explaining the scores.",
   "accuracy": 1,
   "completeness": 1,
   "relevance": 1
@@ -218,17 +216,17 @@ def evaluate_all_retrieval():
         yield test, result, progress
 
 
-def evaluate_all_answers():
+async def evaluate_all_answers():
     tests = load_tests()
     total_tests = len(tests)
     for index, test in enumerate(tests):
-        result = evaluate_answer(test)[0]
+        result = (await evaluate_answer(test))[0]
         progress = (index + 1) / total_tests
         yield test, result, progress
 
-def run_cli_evaluation(test_number: int):
+async def run_cli_evaluation(test_number: int):
     
-    tests = load_tests("tests.jsonl")
+    tests = load_tests()
 
     if test_number < 0 or test_number >= len(tests):
         print(f"Error: test_row_number must be between 0 and {len(tests) - 1}")
@@ -262,10 +260,9 @@ def run_cli_evaluation(test_number: int):
     print("Answer Evaluation")
     print(f"{'=' * 80}")
 
-    answer_result, generated_answer, retrieved_docs = evaluate_answer(test)
+    answer_result, generated_answer, retrieved_docs = await evaluate_answer(test)
 
     print(f"\nGenerated Answer:\n{generated_answer}")
-    print(f"\nFeedback:\n{answer_result.feedback}")
     print("\nScores:")
     print(f"  Accuracy: {answer_result.accuracy:.2f}/5")
     print(f"  Completeness: {answer_result.completeness:.2f}/5")
@@ -273,7 +270,7 @@ def run_cli_evaluation(test_number: int):
     print(f"\n{'=' * 80}\n")
 
 
-def main():
+async def main():
 
     if len(sys.argv) != 2:
         print("Usage: uv run eval.py <test_row_number>")
@@ -285,8 +282,7 @@ def main():
         print("Error: test_row_number must be an integer")
         sys.exit(1)
 
-    run_cli_evaluation(test_number)
-
+    await run_cli_evaluation(test_number)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

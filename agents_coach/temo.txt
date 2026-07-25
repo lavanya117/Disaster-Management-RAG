@@ -1,0 +1,9 @@
+print(memory.history)
+        if len(memory.history):
+            print("empty")
+            push("empty")
+        else:
+            print("working.....")
+            record = select_the_best(memory)
+            temp=json.loads(record)
+            return temp["current_answer"]

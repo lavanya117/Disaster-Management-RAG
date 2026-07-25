@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from chromadb import PersistentClient
 from litellm import completion
 import gradio as gr 
+from pathlib import Path
 
 
 
@@ -13,18 +14,20 @@ class Result(BaseModel):
 
 MODEL="ollama/llama3.2"
 collection_name="docs"
-DB_name="vector_db"
 BASE_URL="http://localhost:11434/v1"
 RETRIEVAL_K=6
 openai= OpenAI(base_url=BASE_URL, api_key='llama')
 reranker_model="BAAI/bge-reranker-v2-m3"
 embedding_model = "qwen3-embedding:4b"
-chroma = PersistentClient(path=DB_name)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DB_NAME = PROJECT_ROOT / "vector_db"
+chroma = PersistentClient(path=str(DB_NAME))
 collection = chroma.get_or_create_collection(collection_name)
 
 
 
 re_model=CrossEncoder(reranker_model)
+
 def reranker(question, chunks):
     pairs=[(question, chunk.page_content) for chunk in chunks]
     scores=re_model.predict(pairs)
@@ -122,4 +125,5 @@ def answer_gr(question: str, history: list[dict]= [])-> str:
     return answer
 
 if __name__=="__main__":
-    gr.ChatInterface(fn=answer_gr).launch(inbrowser=True)
+    #gr.ChatInterface(fn=answer_gr).launch(inbrowser=True)
+    answer_question("what do i do before a flood?")
