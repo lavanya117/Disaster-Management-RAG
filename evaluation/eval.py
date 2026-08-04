@@ -8,7 +8,7 @@ from agents_coach.checker import improvement
 import asyncio
 
 
-MODEL='ollama/llama3.1'
+MODEL='ollama/llama3.1:8b'
 
 class  RetrievalEval(BaseModel):
 

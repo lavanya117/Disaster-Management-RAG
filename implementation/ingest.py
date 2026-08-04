@@ -10,10 +10,13 @@ from dotenv import load_dotenv
 import os
 from multiprocessing import Pool
 from pathlib import Path
+from transformers import AutoTokenizer
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_NAME = PROJECT_ROOT / "vector_db"
 chroma = PersistentClient(path=str(DB_NAME))
+
+qwen_tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-Embedding-8B")
 
 
 load_dotenv()
@@ -27,9 +30,8 @@ class Result(BaseModel):
 
 
 MODEL='ollama/llama3.2'
-embedding_model ="qwen3-embedding:4b"
+embedding_model ="qwen3-embedding:8b"
 collection_name="docs"
-RETRIEVAL_K=6
 DB_name="vector_db"
 BASE_URL="http://localhost:11434/v1"
 openai= OpenAI(base_url=BASE_URL, api_key='llama')
@@ -50,7 +52,10 @@ def fetch_documents():
 
 
 
-chunker = TokenChunker(chunk_size=512, chunk_overlap=128) #overlaping=25%
+chunker = TokenChunker(
+    tokenizer=qwen_tokenizer,
+    chunk_size=512,
+    chunk_overlap=128) 
 
 
 def process_document(doc):

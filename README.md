@@ -19,7 +19,10 @@
 
 # 📌 Why This Project?
 
-During disasters, access to **accurate and trustworthy information** is critical. While Large Language Models are powerful, they may generate hallucinated or outdated responses. This project addresses that limitation by grounding every response in information retrieved from trusted government resources before generating an answer.
+During disasters, access to **accurate and trustworthy information** is critical. While Large Language Models are powerful, they may generate hallucinated or outdated responses. This project addresses that limitation by:
+
+1. Grounding every response in information retrieved from trusted government resources.
+2. Running a multi-agent coaching loop that evaluates and refines the answer for accuracy, completeness, and clarity before delivering it to the user.
 
 ---
 
@@ -30,21 +33,24 @@ During disasters, access to **accurate and trustworthy information** is critical
 - ✅ Semantic retrieval with Cross-Encoder reranking
 - ✅ Interactive Gradio chat interface with conversation memory
 - ✅ Comprehensive evaluation using retrieval metrics and LLM-as-Judge
-- ✅ Built entirely using open-source models and tools
+- ✅ Multi-agent orchestration (OpenAI SDK) that acts as a coach — 4 specialized agents work in a loop to produce the highest-quality answer
+- ✅ RAG core built entirely with open-source models and tools
 
 ---
 
 # ✨ Features
 
 - 🌐 Custom web scraping pipeline from official government websites
-- 📚 Knowledge base built exclusively from trusted sources
+- 📚 Knowledge base built exclusively from trusted sources (with manual quality review)
 - 📄 Intelligent token-based chunking with overlap
 - 🧠 Semantic dense retrieval using Sentence Transformers
 - ✍️ Query rewriting using an open-source LLM to improve retrieval quality
 - 📈 Cross-Encoder reranking for higher retrieval precision
 - 💬 Gradio chat interface with conversation history
+- 🤖 **Multi-agent coaching loop** powered by OpenAI SDK  
+  (Accuracy, Completeness & Relevance agents run concurrently → Rewriting Agent → loops up to 5 times or until quality threshold)
 - 📊 Extensive evaluation using retrieval and generation metrics
-- ⚙️ Fully open-source implementation
+- ⚙️ Fully open-source RAG core + OpenAI SDK for agent orchestration
 
 ---
 
@@ -59,9 +65,10 @@ flowchart TD
     --> C[Link Extraction & Filtering]
     --> D[Page Scraping]
     --> E[HTML Cleaning & Preprocessing]
-    --> F[Token-based Chunking]
-    --> G[Embedding Generation]
-    --> H[ChromaDB Knowledge Base]
+    --> F[Manual Inspection + Remove Suspicious/Irrelevant Files]
+    --> G[Token-based Chunking]
+    --> H[Embedding Generation]
+    --> I[ChromaDB Knowledge Base]
 ```
 
 ---
@@ -69,23 +76,39 @@ flowchart TD
 ## Retrieval & Generation Pipeline
 
 ```mermaid
-flowchart LR
+flowchart TD
+    A[User Query]
+    --> B[LLM Query Rewriter]
+    --> C[Query Embedding]
+    --> D[Vector Search]
+    --> E[Cross-Encoder Reranker]
+    --> F[Prompt Construction]
+    --> G[Large Language Model]
+    --> H[Concurrent Evaluation<br/>Accuracy + Completeness + Relevance]
+    --> I[Rewriting Agent]
+    --> J{Score ≥ Threshold<br/>or Max 5 Iterations?}
+    J -->|No| H
+    J -->|Yes| K[Final Grounded Response]
+```    
 
-A[User Query]
---> B[Query Rewriting]
+---
 
-B --> C[Query Embedding]
+## Multi-Agent Coaching Loop
 
-C --> D[Vector Search]
+The system uses a multi-agent coaching loop orchestrated with the **OpenAI SDK** to iteratively refine every response.
 
-D --> E[Cross-Encoder Reranker]
+**How it works:**
 
-E --> F[Relevant Context]
+1. Three evaluation agents run **concurrently**:
+   - **Accuracy Agent** – checks factual correctness against retrieved sources
+   - **Completeness Agent** – checks whether all relevant aspects of the query are covered
+   - **Relevance Agent** – evaluates how relevant the answer is to the user’s question
 
-F --> G[LLM Response Generation]
+2. The feedback from these three agents is passed to the **Rewriting Agent**, which improves the answer.
 
-G --> H[Grounded Answer]
-```
+3. This process repeats in a loop (maximum **5 iterations**) or until the **weighted average score** of the three evaluation agents reaches a predefined quality threshold.
+
+This closed-loop design acts as an automated coach, continuously improving the answer until it meets high standards of accuracy, completeness, and relevance.
 
 ---
 
@@ -117,16 +140,17 @@ G --> H[Grounded Answer]
 
 # 🛠️ Technology Stack
 
-| Component | Technology |
-|-----------|------------|
-| **User Interface** | Gradio |
-| **LLM** | Ollama |
-| **Vector Database** | ChromaDB |
-| **Embedding Model** | Sentence Transformers |
-| **Reranker** | CrossEncoder |
-| **Web Scraping** | Requests, BeautifulSoup, Selenium |
-| **Chunking** | Chonkie |
-| **Evaluation** | Custom Benchmark + LLM-as-Judge |
+| Component               | Technology                          |
+|-------------------------|-------------------------------------|
+| **User Interface**      | Gradio                              |
+| **LLM (RAG Core)**      | Ollama                              |
+| **Vector Database**     | ChromaDB                            |
+| **Embedding Model**     | Sentence Transformers               |
+| **Reranker**            | CrossEncoder                        |
+| **Web Scraping**        | Requests, BeautifulSoup, Selenium   |
+| **Chunking**            | Chonkie                             |
+| **Agent Orchestration** | OpenAI SDK                          |
+| **Evaluation**          | Custom Benchmark + LLM-as-Judge     |
 
 ---
 
@@ -144,15 +168,7 @@ The pipeline includes:
 
 ![data Pipeline](assets/knowledgebase_pipeline.png)
 
----
-
-## 📈 Embedding Space Visualization
-
-To qualitatively evaluate the semantic structure of the knowledge base, the generated document embeddings were projected into a two-dimensional space using **t-SNE** and visualized with **Plotly**.
-
-The visualization demonstrates how semantically related disaster management documents cluster together, providing insight into the quality of the embedding model.
-
-![Embedding Space Visualization](assets/embedding_visualization.png)
+> **Note:** After building the knowledge base, I manually reviewed the scraped content and removed suspicious or low-value files that were not useful for disaster management. This additional quality check helped ensure the knowledge base remained clean, relevant, and trustworthy.
 
 ---
 
@@ -168,21 +184,28 @@ The evaluation focused on:
 - Response completeness
 - Keyword coverage
 
+### Evaluation Design
+
+Two separate test sets were used to evaluate different parts of the system:
+
+- **Retrieval Evaluation**: Questions were carefully derived from the knowledge base content to measure how well the system retrieves relevant documents (benchmark_tests.jsonl).
+- **Answer Evaluation (LLM-as-Judge)**: More natural, general user-style queries were used to evaluate the quality of the final generated answers, reflecting how real users would typically ask questions (standard_tests.jsonl).
+
 ## Retrieval Metrics
 
 | Metric | Score |
 |---------|-------|
-| **MRR (Mean Reciprocal Rank)** | **0.7583** |
-| **NDCG (Normalized Discounted Cumulative Gain)** | **0.7717** |
-| **Keyword Coverage** | **87.1%** |
+| **MRR (Mean Reciprocal Rank)** | **0.8192** |
+| **NDCG (Normalized Discounted Cumulative Gain)** | **0.8267** |
+| **Keyword Coverage** | **86.0%** |
 
 ## LLM-as-Judge Metrics
 
 | Metric | Score |
 |---------|-------|
-| **Answer Accuracy** | **3.90 / 5** |
-| **Response Completeness** | **3.68 / 5** |
-| **Context Relevance** | **4.62 / 5** |
+| **Answer Accuracy** | **4.24/ 5** |
+| **Response Completeness** | **4.17 / 5** |
+| **Context Relevance** | **4.96 / 5** |
 
 > Detailed evaluation screenshots are included in the repository.
 
@@ -193,19 +216,24 @@ The evaluation focused on:
 ### User
 
 ```text
-What should I do during an earthquake?
+What do I do before a disaster?
 ```
 
 ### Assistant
 
 ```text
-If you are indoors during an earthquake:
+**Before a Disaster:**
 
-• Drop to your hands and knees.
-• Cover your head and neck under sturdy furniture.
-• Hold On until the shaking stops.
-• Stay away from windows and heavy objects.
-• If outdoors, move to an open area away from buildings and power lines.
+1. **Know your zone**: Understand if you live in a hurricane evacuation area by contacting your local government/emergency management office or checking the evacuation site website.
+2. **Put Together an Emergency Kit**: Assemble a basic emergency kit with essential items, such as flashlights, generators, and storm shutters.
+3. **Write or Review Your Family Emergency Plan**: Decide how you will get in contact with each other, where you will go, and what you will do in case of an emergency.
+4. **Review Your Insurance Policies**: Ensure you have adequate coverage for your home and personal property.
+
+**Additional Considerations:**
+
+* Make sure your cell phone and portable radios are charged in case of a power outage or evacuation.
+* Pack essential items, including food, water, and medications, in advance.
+* If you live in an area prone to flooding, consider purchasing flood insurance and evacuate early if ordered to do so.
 
 This guidance is based on official disaster management resources retrieved from the knowledge base.
 ```
@@ -222,9 +250,10 @@ Disaster-Management-RAG/
 ├── knowledge_base/                    # Processed documents
 ├── implemenation/ingest.py            # Data Ingestion
 ├── vector_db/                         # ChromaDB persistence
-├── evaluation/                        # Benchmark scripts 
+├── agents_coach/                      # Agent orchestration
+├── evaluation/                        # Gradio Benchmark (the interface) 
 ├── app.py                             # Gradio evaluation results
-├── implemenation/answer.py            # gradio app (the interface)
+├── theme.py                           # gradio app (the interface)
 ├── requirements.txt
 ├── README.md
 └── LICENSE     
@@ -270,7 +299,7 @@ python implementation\ingest.py
 # 🚀 Launch the Application
 
 ```bash
-python implementation\answer.py
+python theme.py
 ```
 
 The Gradio interface will launch in your browser, allowing you to interact with the Disaster Management RAG Assistant.
@@ -285,6 +314,7 @@ The Gradio interface will launch in your browser, allowing you to interact with 
 - Fine-tuned domain-specific language model
 - Multimodal document ingestion
 - Voice-enabled emergency assistant
+- Expand multi-agent capabilities (e.g., source citation agent, safety-check agent)
 
 ---
 

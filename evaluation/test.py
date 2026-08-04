@@ -9,7 +9,7 @@ class TestQuestion(BaseModel):
     category: str = Field(description="Question category (e.g. preparedness_supply, family_plan)")
 
 
-test_add=r"D:\disaster\Disaster-Management-RAG\evaluation\tests.jsonl"
+test_add=r"D:\disaster\Disaster-Management-RAG\evaluation\benchmark_tests.jsonl"
 
 def load_tests()-> list[TestQuestion]:
     tests=[]
