@@ -1,4 +1,4 @@
-# 🌍 Disaster Management RAG Assistant
+#  Disaster Management RAG Assistant
 
 **An end-to-end Retrieval-Augmented Generation (RAG) system built entirely from scratch using open-source models to deliver reliable, context-grounded disaster preparedness and emergency management information.**
 
@@ -17,7 +17,7 @@
 
 ---
 
-# 📌 Why This Project?
+#  Why This Project?
 
 During disasters, access to **accurate and trustworthy information** is critical. While Large Language Models are powerful, they may generate hallucinated or outdated responses. This project addresses that limitation by:
 
@@ -26,35 +26,35 @@ During disasters, access to **accurate and trustworthy information** is critical
 
 ---
 
-# ✨ Highlights
+#  Highlights
 
-- ✅ Built an end-to-end Retrieval-Augmented Generation (RAG) pipeline completely from scratch
-- ✅ Custom web scraping pipeline for trusted government disaster management resources
-- ✅ Semantic retrieval with Cross-Encoder reranking
-- ✅ Interactive Gradio chat interface with conversation memory
-- ✅ Comprehensive evaluation using retrieval metrics and LLM-as-Judge
-- ✅ Multi-agent orchestration (OpenAI SDK) that acts as a coach — 4 specialized agents work in a loop to produce the highest-quality answer
-- ✅ RAG core built entirely with open-source models and tools
+-  Built an end-to-end Retrieval-Augmented Generation (RAG) pipeline completely from scratch
+-  Custom web scraping pipeline for trusted government disaster management resources
+-  Semantic retrieval with Cross-Encoder reranking
+-  Interactive Gradio chat interface with conversation memory
+-  Comprehensive evaluation using retrieval metrics and LLM-as-Judge
+-  Multi-agent orchestration (OpenAI SDK) that acts as a coach — 4 specialized agents work in a loop to produce the highest-quality answer
+-  RAG core built entirely with open-source models and tools
 
 ---
 
-# ✨ Features
+#  Features
 
-- 🌐 Custom web scraping pipeline from official government websites
-- 📚 Knowledge base built exclusively from trusted sources (with manual quality review)
-- 📄 Intelligent token-based chunking with overlap
-- 🧠 Semantic dense retrieval using Sentence Transformers
-- ✍️ Query rewriting using an open-source LLM to improve retrieval quality
-- 📈 Cross-Encoder reranking for higher retrieval precision
-- 💬 Gradio chat interface with conversation history
-- 🤖 **Multi-agent coaching loop** powered by OpenAI SDK  
+-  Custom web scraping pipeline from official government websites
+-  Knowledge base built exclusively from trusted sources (with manual quality review)
+-  Intelligent token-based chunking with overlap
+-  Semantic dense retrieval using Sentence Transformers
+-  Query rewriting using an open-source LLM to improve retrieval quality
+-  Cross-Encoder reranking for higher retrieval precision
+-  Gradio chat interface with conversation history
+-  **Multi-agent coaching loop** powered by OpenAI SDK  
   (Accuracy, Completeness & Relevance agents run concurrently → Rewriting Agent → loops up to 5 times or until quality threshold)
-- 📊 Extensive evaluation using retrieval and generation metrics
-- ⚙️ Fully open-source RAG core + OpenAI SDK for agent orchestration
+-  Extensive evaluation using retrieval and generation metrics
+-  Fully open-source RAG core + OpenAI SDK for agent orchestration
 
 ---
 
-# 🏗️ System Architecture
+#  System Architecture
 
 ## Knowledge Base Creation Pipeline
 
@@ -112,7 +112,7 @@ This closed-loop design acts as an automated coach, continuously improving the a
 
 ---
 
-# 🖼️ Screenshots
+#  Screenshots
 
 ## User Interface
 
@@ -138,7 +138,7 @@ This closed-loop design acts as an automated coach, continuously improving the a
 
 ---
 
-# 🛠️ Technology Stack
+#  Technology Stack
 
 | Component               | Technology                          |
 |-------------------------|-------------------------------------|
@@ -154,7 +154,7 @@ This closed-loop design acts as an automated coach, continuously improving the a
 
 ---
 
-# 📚 Knowledge Base
+#  Knowledge Base
 
 The knowledge base is constructed entirely from trusted government disaster management resources using a custom scraping and preprocessing pipeline.
 
@@ -172,7 +172,7 @@ The pipeline includes:
 
 ---
 
-# 📊 Evaluation
+#  Evaluation
 
 The system was evaluated on a custom benchmark consisting of **150 disaster management questions** spanning multiple emergency scenarios.
 
@@ -211,7 +211,7 @@ Two separate test sets were used to evaluate different parts of the system:
 
 ---
 
-# 💬 Example Query
+#  Example Query
 
 ### User
 
@@ -240,7 +240,7 @@ This guidance is based on official disaster management resources retrieved from 
 
 ---
 
-# 📁 Repository Structure
+#  Repository Structure
 
 ```text
 Disaster-Management-RAG/
@@ -261,7 +261,7 @@ Disaster-Management-RAG/
 
 ---
 
-# 🚀 Installation
+#  Installation
 
 Clone the repository:
 
@@ -279,7 +279,7 @@ pip install -r requirements.txt
 
 ---
 
-# 🚀 Build the Knowledge Base
+#  Build the Knowledge Base
 
 ```bash
 python scraper\scraper.py
@@ -287,7 +287,7 @@ python scraper\scraper.py
 
 ---
 
-# 🚀 Generate Embeddings
+#  Generate Embeddings
 
 ```bash
 python implementation\ingest.py
@@ -296,7 +296,7 @@ python implementation\ingest.py
 ---
 
 
-# 🚀 Launch the Application
+#  Launch the Application
 
 ```bash
 python theme.py
@@ -306,7 +306,7 @@ The Gradio interface will launch in your browser, allowing you to interact with 
 
 ---
 
-# 🔮 Future Improvements
+#  Future Improvements
 
 - Hybrid retrieval (BM25 + Dense Retrieval)
 - Metadata-aware retrieval and filtering
@@ -318,10 +318,8 @@ The Gradio interface will launch in your browser, allowing you to interact with 
 
 ---
 
-# 📄 License
+#  License
 
 This project is licensed under the **MIT License**.
 
 ---
-
-## ⭐ If you found this project useful, consider giving it a star!
